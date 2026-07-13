@@ -3,9 +3,7 @@
 
 let audioCtx = null;
 let timers   = [];
-let tempo    = 0.3;
-
-const tempoMap = { 1: 0.55, 2: 0.3, 3: 0.16 };
+let tempo    = CONFIG.defaultTempo;
 
 function getAudioCtx() {
   if (!audioCtx) {
@@ -69,7 +67,7 @@ function playSequence(type) {
     if (!p) return;
 
     const isWrong = muts.includes(i);
-    playNote(midiToFreq(p.m), now + i * tempo, tempo * 0.82, isWrong);
+    playNote(midiToFreq(p.m), now + i * tempo, tempo * CONFIG.noteDurationRatio, isWrong);
 
     // Animate the amino acid block as it plays
     const t = setTimeout(() => {
@@ -87,7 +85,7 @@ function playSequence(type) {
           });
           document.querySelectorAll('.aa-block')
             .forEach(el => el.classList.remove('playing'));
-        }, 400);
+        }, CONFIG.playingClearDelayMs);
       }
     }, i * tempo * 1000);
 
@@ -104,7 +102,7 @@ function playCustomSequence(seq) {
     const p = AA_MAP[aa];
     if (!p) return;
 
-    playNote(midiToFreq(p.m), now + i * tempo, tempo * 0.82, false);
+    playNote(midiToFreq(p.m), now + i * tempo, tempo * CONFIG.noteDurationRatio, false);
 
     const t = setTimeout(() => {
       document.querySelectorAll('#strip-custom .aa-block')
@@ -118,7 +116,7 @@ function playCustomSequence(seq) {
 }
 
 function updateTempo(value) {
-  tempo = tempoMap[value];
+  tempo = CONFIG.tempoMap[value];
   const lbl = document.getElementById('tempo-lbl');
   if (lbl) lbl.textContent = value == 1 ? 'slow' : value == 2 ? 'norm' : 'fast';
 }

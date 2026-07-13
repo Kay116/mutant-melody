@@ -53,5 +53,27 @@ const QUIZ_DATA = [
     ],
     ans: 2,
     exp: 'Bar height directly encodes pitch. Negatively charged amino acids have short bars (low pitch), positively charged ones have tall bars (high pitch), and nonpolar acids sit in the middle range.'
+  },
+  {
+    q: 'In alpha-1 antitrypsin deficiency, what happens after the E342K mutation flips a negative charge to a positive one?',
+    opts: [
+      'The protein is destroyed immediately by the immune system',
+      'The protein misfolds and clumps up inside liver cells instead of being released',
+      'The protein becomes more stable and works better than before',
+      'Nothing changes — the mutation is silent'
+    ],
+    ans: 1,
+    exp: 'The charge reversal causes AAT molecules to misfold and stick together inside liver cells. This damages the liver and starves the lungs of the protective enzyme they need, leading to early emphysema.'
+  },
+  {
+    q: 'Phenylketonuria (PKU) prevents the body from breaking down which amino acid?',
+    opts: [
+      'Glycine',
+      'Lysine',
+      'Phenylalanine',
+      'Proline'
+    ],
+    ans: 2,
+    exp: 'PKU is caused by mutations in the PAH gene, which encodes the enzyme that converts phenylalanine into tyrosine. Without working PAH, phenylalanine builds up in the blood and can harm brain development — which is why newborns are screened for it right after birth.'
   }
 ];

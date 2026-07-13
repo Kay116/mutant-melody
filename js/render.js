@@ -8,7 +8,7 @@ function drawPianoRoll(canvasId, seq, mutPositions, lineColor) {
 
   const dpr = window.devicePixelRatio || 1;
   const W   = canvas.offsetWidth || 700;
-  const H   = 72;
+  const H   = CONFIG.pianoRollHeight;
 
   canvas.width  = W * dpr;
   canvas.height = H * dpr;
@@ -72,6 +72,15 @@ function drawPianoRoll(canvasId, seq, mutPositions, lineColor) {
   ctx.stroke();
 }
 
+function downloadPianoRoll(canvasId, filename) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const link = document.createElement('a');
+  link.download = filename || (canvasId + '.png');
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
 function renderAminoStrip(stripId, seq, mutPositions) {
   const el = document.getElementById(stripId);
   if (!el) return;
@@ -86,25 +95,32 @@ function renderAminoStrip(stripId, seq, mutPositions) {
     block.className = 'aa-block' + (isMut ? ' mut' : '');
     block.style.background = grp.bg;
     block.style.color      = grp.txt;
+    block.tabIndex = 0;
     block.innerHTML = `
       <span class="aa-letter">${aa}</span>
       <span class="aa-note-lbl">${midiToName(p.m)}</span>
     `;
 
-    // Tooltip on hover
-    block.onmouseenter = () => {
+    const groupName = p.g === 'np'  ? 'nonpolar' :
+                      p.g === 'pol' ? 'polar'    :
+                      p.g === 'pos' ? 'positive charge' : 'negative charge';
+    const tipText = `${p.n} (${aa}) · ${groupName} · pitch: ${midiToName(p.m)}`
+                  + (isMut ? ' · MUTATION SITE' : '');
+    block.setAttribute('aria-label', tipText);
+
+    // Tooltip on hover and keyboard focus
+    const showTip = () => {
       const bar = document.getElementById('tip-bar');
-      if (!bar) return;
-      const groupName = p.g === 'np'  ? 'nonpolar' :
-                        p.g === 'pol' ? 'polar'    :
-                        p.g === 'pos' ? 'positive charge' : 'negative charge';
-      bar.textContent = `${p.n} (${aa}) · ${groupName} · pitch: ${midiToName(p.m)}`
-                      + (isMut ? ' · MUTATION SITE' : '');
+      if (bar) bar.textContent = tipText;
     };
-    block.onmouseleave = () => {
+    const hideTip = () => {
       const bar = document.getElementById('tip-bar');
       if (bar) bar.textContent = 'Hover any amino acid block to learn what it is';
     };
+    block.onmouseenter = showTip;
+    block.onmouseleave = hideTip;
+    block.onfocus      = showTip;
+    block.onblur       = hideTip;
 
     el.appendChild(block);
   });
@@ -132,8 +148,11 @@ function renderDiseaseGrid() {
   el.innerHTML = '';
 
   Object.entries(DISEASES).forEach(([key, d]) => {
-    const card = document.createElement('div');
+    const card = document.createElement('button');
+    card.type = 'button';
     card.className = 'd-card' + (key === curDisease ? ' on' : '');
+    card.setAttribute('aria-pressed', key === curDisease ? 'true' : 'false');
+    card.setAttribute('aria-label', d.name + ' — ' + d.tag);
     card.innerHTML = `
       <div class="d-icon">${d.icon}</div>
       <div class="d-name">${d.name}</div>

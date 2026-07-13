@@ -8,19 +8,21 @@ let qScore = 0;
 // ─── TABS ────────────────────────────────────────────
 function switchTab(tabId, clickedBtn) {
   document.querySelectorAll('.pane').forEach(p => p.classList.remove('on'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('on'));
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.remove('on');
+    b.setAttribute('aria-selected', 'false');
+  });
   document.getElementById('pane-' + tabId).classList.add('on');
-  clickedBtn.classList.add('on');
-  if (tabId === 'quiz') loadQuiz();
-}
 
-function openTab(tabId) {
-  document.querySelectorAll('.pane').forEach(p => p.classList.remove('on'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('on'));
-  document.getElementById('pane-' + tabId).classList.add('on');
-  const tabIndex = { listen: 0, compare: 1, ai: 2, custom: 3, quiz: 4 };
-  const btns = document.querySelectorAll('.tab-btn');
-  if (btns[tabIndex[tabId]]) btns[tabIndex[tabId]].classList.add('on');
+  if (!clickedBtn) {
+    const tabIndex = { listen: 0, compare: 1, ai: 2, custom: 3, quiz: 4 };
+    const btns = document.querySelectorAll('.tab-btn');
+    clickedBtn = btns[tabIndex[tabId]];
+  }
+  if (clickedBtn) {
+    clickedBtn.classList.add('on');
+    clickedBtn.setAttribute('aria-selected', 'true');
+  }
   if (tabId === 'quiz') loadQuiz();
 }
 
@@ -67,7 +69,7 @@ function loadDisease(key) {
   setTimeout(() => {
     drawPianoRoll('cv-h', d.healthy.seq, [],    'rgba(29,185,122,0.8)');
     drawPianoRoll('cv-m', d.mutant.seq,  d.mut, 'rgba(226,75,74,0.8)');
-  }, 40);
+  }, CONFIG.rollDrawDelayMs);
 }
 
 // ─── QUIZ ────────────────────────────────────────────
@@ -140,17 +142,38 @@ function updateScore() {
   if (el) el.textContent = `Score: ${qScore} / ${QUIZ_DATA.length}`;
 }
 
+// ─── THEME ───────────────────────────────────────────
+const THEME_KEY = 'ddm_theme';
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const btn = document.getElementById('theme-toggle');
+  if (btn) btn.textContent = theme === 'light' ? '☾ Dark' : '☀ Light';
+  localStorage.setItem(THEME_KEY, theme);
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+  applyTheme(current === 'light' ? 'dark' : 'light');
+}
+
 // ─── INIT ────────────────────────────────────────────
 function init() {
+  applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
   renderDiseaseGrid();
   renderChips();
   loadDisease('sickle');
 
-  // Redraw canvas on window resize
+  // Redraw canvas on window resize (debounced so a resize drag doesn't
+  // trigger a redraw on every single event)
+  let resizeTimer = null;
   window.addEventListener('resize', () => {
-    const d = DISEASES[curDisease];
-    drawPianoRoll('cv-h', d.healthy.seq, [],    'rgba(29,185,122,0.8)');
-    drawPianoRoll('cv-m', d.mutant.seq,  d.mut, 'rgba(226,75,74,0.8)');
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      const d = DISEASES[curDisease];
+      drawPianoRoll('cv-h', d.healthy.seq, [],    'rgba(29,185,122,0.8)');
+      drawPianoRoll('cv-m', d.mutant.seq,  d.mut, 'rgba(226,75,74,0.8)');
+    }, CONFIG.resizeDebounceMs);
   });
 }
 

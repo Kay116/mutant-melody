@@ -12,6 +12,8 @@
 
   <!-- ═══ HERO ═══════════════════════════════════════ -->
   <div class="hero">
+    <button id="theme-toggle" class="fa-btn theme-toggle-btn"
+      aria-label="Toggle light/dark theme" onclick="toggleTheme()">☾ Dark</button>
     <div class="hero-eyebrow">Bioinformatics × Music</div>
     <h1 class="hero-title">Disease in <span class="accent">D minor</span></h1>
     <p class="hero-sub">One wrong amino acid. One wrong note. Hear the difference — then let AI explain it in plain English.</p>
@@ -21,16 +23,16 @@
   <div class="app">
 
     <!-- Tab navigation -->
-    <div class="tab-bar">
-      <button class="tab-btn on" onclick="switchTab('listen', this)">♫ Listen</button>
-      <button class="tab-btn"    onclick="switchTab('compare', this)">⊞ Compare</button>
-      <button class="tab-btn"    onclick="switchTab('ai', this)">◎ Ask AI</button>
-      <button class="tab-btn"    onclick="switchTab('custom', this)">⊕ My sequence</button>
-      <button class="tab-btn"    onclick="switchTab('quiz', this)">◈ Quiz</button>
+    <div class="tab-bar" role="tablist">
+      <button class="tab-btn on" role="tab" aria-selected="true"  onclick="switchTab('listen', this)">♫ Listen</button>
+      <button class="tab-btn"    role="tab" aria-selected="false" onclick="switchTab('compare', this)">⊞ Compare</button>
+      <button class="tab-btn"    role="tab" aria-selected="false" onclick="switchTab('ai', this)">◎ Ask AI</button>
+      <button class="tab-btn"    role="tab" aria-selected="false" onclick="switchTab('custom', this)">⊕ My sequence</button>
+      <button class="tab-btn"    role="tab" aria-selected="false" onclick="switchTab('quiz', this)">◈ Quiz</button>
     </div>
 
     <!-- ── LISTEN ─────────────────────────────────── -->
-    <div id="pane-listen" class="pane on">
+    <div id="pane-listen" class="pane on" role="tabpanel">
 
       <div class="disease-grid" id="d-grid"></div>
 
@@ -67,6 +69,9 @@
           <span class="seq-hdr-label">Healthy sequence</span>
           <span class="seq-hdr-label" id="h-name"
             style="font-weight:400;text-transform:none;letter-spacing:0;margin-left:4px"></span>
+          <button class="fa-btn" style="margin-left:auto;padding:4px 10px;font-size:11px"
+            aria-label="Save healthy sequence piano roll as image"
+            onclick="downloadPianoRoll('cv-h', curDisease + '-healthy.png')">⭳ Save image</button>
         </div>
         <div class="roll-wrap">
           <canvas class="roll-canvas" id="cv-h"></canvas>
@@ -82,6 +87,9 @@
           <span style="font-size:10px;color:var(--red);margin-left:6px">
             (red border = mutation site)
           </span>
+          <button class="fa-btn" style="margin-left:auto;padding:4px 10px;font-size:11px"
+            aria-label="Save mutant sequence piano roll as image"
+            onclick="downloadPianoRoll('cv-m', curDisease + '-mutant.png')">⭳ Save image</button>
         </div>
         <div class="roll-wrap">
           <canvas class="roll-canvas" id="cv-m"></canvas>
@@ -92,14 +100,14 @@
       <div class="legend" id="legend"></div>
 
       <div class="footer-actions">
-        <button class="fa-btn" onclick="openTab('ai')">◎ Ask AI about this disease ↗</button>
-        <button class="fa-btn" onclick="openTab('compare')">⊞ Compare side by side ↗</button>
-        <button class="fa-btn" onclick="openTab('quiz')">◈ Test your knowledge ↗</button>
+        <button class="fa-btn" onclick="switchTab('ai')">◎ Ask AI about this disease ↗</button>
+        <button class="fa-btn" onclick="switchTab('compare')">⊞ Compare side by side ↗</button>
+        <button class="fa-btn" onclick="switchTab('quiz')">◈ Test your knowledge ↗</button>
       </div>
     </div>
 
     <!-- ── COMPARE ────────────────────────────────── -->
-    <div id="pane-compare" class="pane">
+    <div id="pane-compare" class="pane" role="tabpanel">
       <div class="cmp-grid" id="cmp-grid"></div>
       <div class="insight-box" id="cmp-insight"></div>
       <div class="controls-bar">
@@ -110,7 +118,7 @@
     </div>
 
     <!-- ── ASK AI ─────────────────────────────────── -->
-    <div id="pane-ai" class="pane">
+    <div id="pane-ai" class="pane" role="tabpanel">
       <div class="ai-panel">
         <div class="ai-head">
           <span style="font-size:18px;opacity:.7">◎</span>
@@ -135,7 +143,7 @@
     </div>
 
     <!-- ── MY SEQUENCE ────────────────────────────── -->
-    <div id="pane-custom" class="pane">
+    <div id="pane-custom" class="pane" role="tabpanel">
       <div class="custom-wrap">
         <div class="custom-title">Paste your own sequence</div>
         <div class="custom-sub">
@@ -164,7 +172,7 @@
     </div>
 
     <!-- ── QUIZ ───────────────────────────────────── -->
-    <div id="pane-quiz" class="pane">
+    <div id="pane-quiz" class="pane" role="tabpanel">
       <div class="quiz-wrap">
         <div class="quiz-hdr">
           <span class="quiz-hdr-title">◈ Test your understanding</span>
@@ -179,6 +187,7 @@
   <!-- ═══ SCRIPTS ════════════════════════════════════
        Order matters — data first, then functions, then app
   ══════════════════════════════════════════════════ -->
+  <script src="data/config.js"></script>
   <script src="data/aminoacids.js"></script>
   <script src="data/diseases.js"></script>
   <script src="data/quiz.js"></script>

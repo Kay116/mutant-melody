@@ -1,10 +1,39 @@
 // ─── AI ENGINE ──────────────────────────────────────
 // Handles all calls to Groq's free AI API
 
-// ✏️  Replace this with your free key from console.groq.com
-const GROQ_KEY = 'YOUR_GROQ_KEY_HERE';
+// 
+const GROQ_KEY = 'Add your Groq key here (https://groq.com/)';
 
 let chatHistory = [];
+let groqKeyWarningShown = false;
+
+function hasValidGroqKey() {
+  return typeof GROQ_KEY === 'string'
+    && GROQ_KEY.trim().length > 0
+    && !GROQ_KEY.startsWith('Add your Groq key');
+}
+
+// ─── LOCAL CACHE ─────────────────────────────────────
+// Avoids repeat Groq calls for a question/sequence already asked before.
+// Bump the version suffix if the prompts below change, to invalidate old entries.
+const AI_CACHE_PREFIX = 'ddm_ai_cache_v1_';
+
+function getCachedAI(key) {
+  try {
+    const raw = localStorage.getItem(AI_CACHE_PREFIX + key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function setCachedAI(key, value) {
+  try {
+    localStorage.setItem(AI_CACHE_PREFIX + key, JSON.stringify(value));
+  } catch {
+    // localStorage unavailable (quota, private mode) — caching is best-effort
+  }
+}
 
 async function callGroq(messages, systemPrompt) {
   const response = await fetch(
@@ -45,6 +74,33 @@ async function doChat() {
   chatHistory.push({ role: 'user', content: question });
   renderChat();
 
+  if (!hasValidGroqKey()) {
+    chatHistory.push({
+      role: 'assistant',
+      content: groqKeyWarningShown
+        ? 'Groq key still not set — see js/ai.js.'
+        : '⚠ No Groq API key configured yet. Add yours in js/ai.js — see SETUP.md for the 2-minute walkthrough.'
+    });
+    groqKeyWarningShown = true;
+    renderChat();
+    sendBtn.disabled = false;
+    return;
+  }
+
+  // A cached reply is only safe for the first message of a conversation —
+  // later messages depend on prior turns, which the cache key doesn't capture.
+  const isFirstMessage = chatHistory.length === 1;
+  const cacheKey = 'chat_' + curDisease + '_' + question.toLowerCase().trim();
+  if (isFirstMessage) {
+    const cached = getCachedAI(cacheKey);
+    if (cached) {
+      chatHistory.push({ role: 'assistant', content: cached });
+      renderChat();
+      sendBtn.disabled = false;
+      return;
+    }
+  }
+
   // Show loading dots
   const chatBody = document.getElementById('chat-body');
   const loader   = document.createElement('div');
@@ -70,6 +126,7 @@ async function doChat() {
     document.getElementById('loader-msg')?.remove();
     chatHistory.push({ role: 'assistant', content: reply });
     renderChat();
+    if (isFirstMessage) setCachedAI(cacheKey, reply);
   } catch (err) {
     document.getElementById('loader-msg')?.remove();
     chatHistory.push({
@@ -99,6 +156,14 @@ async function doCustomAnalysis() {
     return;
   }
 
+  if (!hasValidGroqKey()) {
+    resultEl.textContent = groqKeyWarningShown
+      ? 'Groq key still not set — see js/ai.js.'
+      : '⚠ No Groq API key configured yet. Add yours in js/ai.js — see SETUP.md for the 2-minute walkthrough.';
+    groqKeyWarningShown = true;
+    return;
+  }
+
   goBtn.disabled    = true;
   resultEl.textContent = 'Analyzing your sequence…';
   visualEl.innerHTML   = '';
@@ -110,11 +175,15 @@ async function doCustomAnalysis() {
 
   const systemPrompt = `You are a biology guide in a protein sonification app. Given an amino acid sequence, explain in 4–5 warm plain-English sentences: what kind of protein this might be, what the chemical pattern (nonpolar/polar/charged mix) suggests about its role, and what is musically interesting about its pattern. End with one curiosity question.`;
 
+  const cacheKey = 'custom_' + raw;
+
   try {
-    const reply = await callGroq(
+    const cached = getCachedAI(cacheKey);
+    const reply  = cached || await callGroq(
       [{ role: 'user', content: `Sequence: ${raw}\nDetails: ${details}` }],
       systemPrompt
     );
+    if (!cached) setCachedAI(cacheKey, reply);
     resultEl.innerHTML = reply.replace(/\n/g, '<br>');
 
     // Draw visualization for the custom sequence
@@ -144,6 +213,10 @@ async function doCustomAnalysis() {
         onclick="playCustomSequence(window._customSeq)"
         style="font-size:13px;padding:9px 18px">
         ▶ Play your sequence
+      </button>
+      <button class="fa-btn" aria-label="Save your sequence piano roll as image"
+        onclick="downloadPianoRoll('cv-custom', 'custom-sequence.png')">
+        ⭳ Save image
       </button>`;
     visualEl.appendChild(playRow);
 
@@ -152,7 +225,7 @@ async function doCustomAnalysis() {
     setTimeout(() => {
       drawPianoRoll('cv-custom', raw, [], 'rgba(139,124,248,0.8)');
       renderAminoStrip('strip-custom', raw, []);
-    }, 40);
+    }, CONFIG.rollDrawDelayMs);
 
   } catch (err) {
     resultEl.textContent = 'Connection error — check your Groq key in js/ai.js and try again.';
