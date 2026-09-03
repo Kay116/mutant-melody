@@ -37,3 +37,14 @@ function midiToName(m) {
 function midiToFreq(m) {
   return 440 * Math.pow(2, (m - 69) / 12);
 }
+
+// Groups used by the (educational) sonification mapping.
+const AA_GROUPS = ['np', 'pol', 'pos', 'neg'];
+
+// Export for the Node test suite; publish to the global object in the
+// browser so the IIFE-wrapped modules (js/sequence.js) can read it too.
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { AA_MAP, GRP, NOTES, AA_GROUPS, midiToName, midiToFreq };
+} else if (typeof globalThis !== 'undefined') {
+  Object.assign(globalThis, { AA_MAP, GRP, NOTES, AA_GROUPS, midiToName, midiToFreq });
+}

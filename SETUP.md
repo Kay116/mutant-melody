@@ -1,217 +1,169 @@
 # Setup guide
 
-Complete instructions for running this project locally and deploying it live — no prior experience needed.
+How to run **Disease in D Minor** locally, deploy the static site, and
+(optionally) deploy the AI backend.
+
+> **Never put an API key in the front-end or commit one to Git.** The key
+> belongs only in the backend's environment. `.env` is git-ignored on
+> purpose; `.env.example` is the template.
 
 ---
 
 ## What you need
 
-| Tool | What it is | Cost |
+| Tool | For | Notes |
 |---|---|---|
-| A browser | Chrome, Firefox, Safari, Edge | Free |
-| VS Code | Text editor for code | Free |
-| GitHub account | Stores and hosts your project | Free |
-| Groq API key | Powers the AI guide | Free |
+| A browser | running the app | Chrome, Firefox, Safari, Edge |
+| Node 18+ | tests and the local AI backend | [nodejs.org](https://nodejs.org) |
+| Python 3 *or* any static server | serving the front-end locally | `python -m http.server` |
+| A GitHub account | hosting the static site on Pages | free |
+| A Groq API key | the AI features only | [console.groq.com](https://console.groq.com) — free tier, limits apply |
 
 ---
 
-## Part 1 — Run it on your computer
+## Part 1 — Run the front-end locally
 
-### Step 1: Download the project
-
-**Option A — If you have Git:**
 ```bash
-git clone https://github.com/yourusername/disease-in-d-minor.git
+git clone https://github.com/Kay116/disease-in-d-minor.git
 cd disease-in-d-minor
+python -m http.server 8080
 ```
 
-**Option B — No Git:**
-Go to the repo on GitHub → click the green **Code** button → click **Download ZIP** → unzip it on your computer.
+Open <http://localhost:8080>. The **Listen**, **Compare**, **My sequence**
+(visualization + playback) and **Quiz** tabs work with no further setup.
+
+The **Ask AI** tab and the AI analysis in **My sequence** stay disabled
+until you point the app at a backend (Part 3).
 
 ---
 
-### Step 2: Get your free Groq AI key
+## Part 2 — Deploy the static site (GitHub Pages)
 
-1. Go to **[console.groq.com](https://console.groq.com)**
-2. Click **Sign in with Google** — no credit card, completely free
-3. In the left sidebar, click **API Keys**
-4. Click **Create API Key** → give it any name (e.g. `disease-app`) → click Submit
-5. Copy the key — it looks like `gsk_abc123xyz...`
+1. Push this repository to GitHub (it is already at
+   `github.com/Kay116/disease-in-d-minor`).
+2. Repo **Settings → Pages**.
+3. **Build and deployment → Source:** *Deploy from a branch*.
+4. **Branch:** `main`, **Folder:** `/ (root)` → **Save**.
+5. After ~1 minute the site is live at
+   `https://Kay116.github.io/disease-in-d-minor`.
 
-> **Important:** Groq only shows your key once. Paste it somewhere safe (phone notes, password manager) before continuing.
+To update the live site, push to `main`.
+
+GitHub Pages serves static files only, so the AI backend must be hosted
+elsewhere (Part 3). That is fine — the app is designed to run without it.
 
 ---
 
-### Step 3: Add your key to the project
+## Part 3 — The AI backend (optional)
 
-Open VS Code → File → Open Folder → select the project folder.
+### 3a. Get a Groq key
 
-Open the file `js/ai.js`. Near the top, find this line:
+1. Sign in at [console.groq.com](https://console.groq.com).
+2. **API Keys → Create API Key**, copy it (shown once; starts with `gsk_`).
+3. Keep it somewhere safe. Do **not** paste it into any file that gets
+   committed.
+
+### 3b. Run the backend locally
+
+```bash
+cp .env.example .env
+# edit .env and set: GROQ_API_KEY=gsk_your_real_key
+node server.js
+```
+
+This serves the same handler as `api/chat.js` at
+<http://localhost:8787/api/chat>.
+
+In `data/config.js` set:
 
 ```js
-const GROQ_KEY = 'YOUR_GROQ_KEY_HERE';
+apiBase: 'http://localhost:8787',
 ```
 
-Replace `YOUR_GROQ_KEY_HERE` with your real key. Keep the single quote marks `'` on both sides:
+Reload the front-end — the AI tabs now work.
 
-```js
-const GROQ_KEY = 'gsk_abc123xyz...';
-```
+### 3c. Deploy the backend
 
-Save the file with **Ctrl+S** (Windows) or **Cmd+S** (Mac).
+`api/chat.js` exports a standard Node request handler
+(`(req, res) => {}`), compatible with Vercel and Netlify Functions as-is
+(other hosts may need a thin adapter).
+
+1. Create a project on the host and add `api/chat.js`.
+2. In the host's dashboard, set the environment variable
+   **`GROQ_API_KEY`** to your key.
+3. *(Optional)* set **`ALLOWED_ORIGINS`** to a comma-separated list, e.g.
+   `https://Kay116.github.io`, to reject requests from other origins.
+4. Deploy. Note the deployment origin, e.g. `https://your-app.vercel.app`.
+5. In `data/config.js` set `apiBase` to that origin and push, so Pages
+   picks it up.
+
+The backend enforces its own limits (request shape, message length,
+sequence length, a small per-instance rate limit) and returns only
+`{ "reply": "..." }` — never the key or provider metadata.
 
 ---
 
-### Step 4: Open in your browser
+## Part 4 — Tests
 
-Find `index.html` in your project folder. Double-click it. It opens in your browser.
-
-You should see the app with the dark theme, four disease cards, and the tab bar. Click **Play Healthy** on the Listen tab — you should hear music. Click the **Ask AI** tab, type a question, click **Ask** — you should get an AI response within a few seconds.
-
-> **Nothing happening?** Most common fix: make sure you saved `js/ai.js` after adding your key. Press Ctrl+S and refresh the browser (F5).
-
----
-
-## Part 2 — Put it live on the internet (free)
-
-GitHub Pages turns your repo into a real public website at no cost.
-
-### Step 1: Create a GitHub repo
-
-1. Go to **[github.com](https://github.com)** and sign in
-2. Click the **+** icon (top right) → **New repository**
-3. Fill in:
-   - Repository name: `disease-in-d-minor`
-   - Visibility: **Public** ← required for free Pages
-   - Check **Add a README file**
-4. Click **Create repository**
-
----
-
-### Step 2: Upload your files
-
-In your new repo, click **Add file → Upload files**.
-
-Drag your entire project folder into the upload box, or click to browse and select all files. Make sure the folder structure is preserved:
-
-```
-index.html
-README.md
-SETUP.md
-css/style.css
-data/aminoacids.js
-data/diseases.js
-data/quiz.js
-js/audio.js
-js/render.js
-js/ai.js        ← make sure your key is in here before uploading
-js/app.js
+```bash
+npm install
+npm run check      # syntax check + 63 unit/DOM tests
 ```
 
-Scroll down → write a commit message like `Initial upload` → click **Commit changes**.
+CI (`.github/workflows/ci.yml`) runs the same on every push and PR.
 
 ---
 
-### Step 3: Enable GitHub Pages
+## Part 5 — Adding a disease
 
-1. In your repo, click **Settings** (top tab)
-2. In the left sidebar, scroll down and click **Pages**
-3. Under "Build and deployment", set:
-   - Source: **Deploy from a branch**
-   - Branch: **main**
-   - Folder: **/ (root)**
-4. Click **Save**
-
-Wait about 60 seconds, then refresh the Settings → Pages page. You'll see a green box:
-
-```
-Your site is live at https://yourusername.github.io/disease-in-d-minor
-```
-
-Click that link — your app is live on the internet.
-
----
-
-### Step 4: Update the live site anytime
-
-Every time you make a change locally:
-
-1. Edit the file in VS Code → save
-2. Go to your GitHub repo → find the file → click the pencil (Edit) icon
-3. Paste your updated code → click **Commit changes**
-4. Wait 60 seconds → the live site updates automatically
-
-Or use **GitHub Desktop** (free app at desktop.github.com) to sync changes without going through the browser.
-
----
-
-## Part 3 — Adding a new disease
-
-All disease data lives in `data/diseases.js`. To add a new disease, open that file and add a new entry following the same pattern as the existing four.
-
-Each entry needs:
+Add an entry to `data/diseases.js` following the existing pattern:
 
 ```js
 your_key: {
   name: 'Display name',
-  tag:  'Short description · stat',
-  icon: '◉',                          // any single symbol
-  quote: 'One-sentence human story.',
+  tag:  'Category · prevalence note',
+  icon: '◆',
+  quote: 'One-sentence framing.',
   facts: ['Fact 1', 'Fact 2', 'Fact 3'],
-  mutation: 'HTML description of the mutation.',
-  healthy: { name: 'Sequence label', seq: 'AMINOACIDLETTERS' },
-  mutant:  { name: 'Sequence label', seq: 'AMINOACIDLETTERS' },
-  mut: [5],                            // zero-indexed position(s) of mutation
-  hStats: { len: 20, charge: -1, np: 12, pol: 4, pos: 2, neg: 2 },
-  mStats: { len: 20, charge:  0, np: 13, pol: 4, pos: 2, neg: 1 },
-  insight: 'One sentence explaining what changed and why it matters.',
+  summary: 'Plain-text description of the mutation (no HTML).',
+  healthy: { name: 'Protein, residues A–B', seq: 'VERBATIMUNIPROTSLICE' },
+  mutation: { type: 'substitution', index: 4, biologicalPosition: 123, from: 'E', to: 'K' },
+  //         type: 'deletion' uses  to: null
+  insight: 'Plain-text: what changed and why it matters.',
+  sources: [
+    { label: 'UniProt Xxxxxx', url: 'https://www.uniprot.org/uniprotkb/Xxxxxx/entry' },
+    { label: 'ClinVar / dbSNP …', url: 'https://…' }
+  ]
 }
 ```
 
-Where to get sequences: [SAbDab](https://opig.stats.ox.ac.uk/webapps/sabdab-sabpred/sabdab), [UniProt](https://www.uniprot.org), [RCSB PDB](https://www.rcsb.org).
+Rules the test suite enforces (`npm test`):
 
----
+- `seq` is a verbatim UniProt slice, standard residues only, ≥ 3 long.
+- `mutation.index` is in range and `seq[index] === mutation.from`.
+- substitution `to` is a standard residue and differs from `from`;
+  deletion `to` is `null`.
+- at least one `sources` entry with an `https://` URL.
+- `summary` and `insight` contain no `<` or `>`.
 
-## Groq free tier limits
-
-| Limit | Value |
-|---|---|
-| Requests per minute | 30 |
-| Requests per day | 14,400 |
-| Cost | $0 forever |
-
-For a personal or student project, these limits are effectively unlimited. If you ever hit the per-minute limit, the app shows a friendly error and the user can try again in a moment.
+Get sequences and numbering from [UniProt](https://www.uniprot.org),
+variants from [ClinVar](https://www.ncbi.nlm.nih.gov/clinvar/), and
+structures from [RCSB PDB](https://www.rcsb.org).
 
 ---
 
 ## Troubleshooting
 
-**AI not responding**
-- Check that your key in `js/ai.js` starts with `gsk_` and has no extra spaces
-- Make sure you saved the file after editing
-- Check the browser console (F12 → Console tab) for error messages
+**AI tab says "not configured"** — `data/config.js` `apiBase` is empty or
+wrong, or the backend is down. Everything else still works.
 
-**Music not playing**
-- Some browsers block audio until the user clicks something — clicking the Play button counts, so this should work automatically
-- If on iOS Safari, make sure your phone is not on silent mode
+**Backend returns 500** — `GROQ_API_KEY` is not set in its environment.
 
-**Site not updating after changes**
-- GitHub Pages can take up to 2 minutes to rebuild
-- Try a hard refresh: Ctrl+Shift+R (Windows) or Cmd+Shift+R (Mac)
+**Backend returns 403** — `ALLOWED_ORIGINS` does not include the origin
+the site is served from.
 
-**Sequence validation error**
-- Only the 20 standard amino acid letters are valid: A C D E F G H I K L M N P Q R S T V W Y
-- Remove any spaces, numbers, or FASTA header lines (lines starting with `>`)
+**Music not playing** — browsers block audio until you interact with the
+page; clicking a Play button counts. On iOS, check the silent switch.
 
----
-
-## Tech stack
-
-| Layer | Technology | Why |
-|---|---|---|
-| Structure | HTML5 | Single page, no framework needed |
-| Design | CSS3 custom properties | Dark theme, responsive, no library |
-| Audio | Web Audio API | Built into every browser, no install |
-| AI | Groq + Llama 3.1 | Free tier, fast responses |
-| Hosting | GitHub Pages | Free, permanent, automatic HTTPS |
-| Fonts | Google Fonts (Space Grotesk + Inter) | Clean, modern, free |
+**Long sequence looks cramped** — the piano roll scrolls horizontally; a
+processed sequence over 500 residues is rejected by design.

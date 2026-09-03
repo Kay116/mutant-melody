@@ -127,6 +127,8 @@ body {
   cursor: pointer; transition: all .18s;
   border-left: 3px solid var(--border2);
   position: relative; overflow: hidden;
+  display: block; width: 100%; text-align: left;
+  font: inherit; color: inherit;
 }
 .d-card::before {
   content: ''; position: absolute; inset: 0;
@@ -456,6 +458,103 @@ body {
 }
 .fa-btn:hover { background: var(--bg3); color: var(--text); border-color: var(--border2); }
 
+/* ─── DISCLAIMER ─────────────────────────────────────── */
+.disclaimer {
+  max-width: 780px; margin: 16px auto 0; padding: 12px 16px;
+  border: 1px solid var(--border2); border-left: 3px solid var(--blue);
+  border-radius: 0 var(--r-md) var(--r-md) 0;
+  background: var(--bg2); font-size: 12px; color: var(--text2); line-height: 1.6;
+}
+.disclaimer strong { color: var(--text); display: block; margin-bottom: 4px; }
+
+/* ─── SOURCES ────────────────────────────────────────── */
+.sources {
+  display: flex; flex-wrap: wrap; gap: 8px 14px;
+  margin-bottom: 18px; font-size: 11px; align-items: baseline;
+}
+.sources:empty { display: none; }
+.sources-label {
+  font-size: 10px; font-weight: 700; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--text3);
+}
+.sources a { color: var(--text2); text-decoration: underline; text-underline-offset: 2px; }
+.sources a:hover { color: var(--green); }
+
+/* ─── SEQUENCE HEADERS ───────────────────────────────── */
+.seq-dot-green { background: var(--green); }
+.seq-dot-red   { background: var(--red);   }
+.seq-hdr-name  { font-size: 11px; color: var(--text2); }
+.seq-hdr-hint  { font-size: 10px; color: var(--text3); margin-left: auto; }
+
+/* ─── GAP (DELETED RESIDUE) ──────────────────────────── */
+.aa-block.gap {
+  border: 1px dashed var(--red);
+  background: repeating-linear-gradient(45deg,
+    transparent, transparent 3px, var(--red-bg) 3px, var(--red-bg) 6px);
+  cursor: default;
+}
+.aa-block.gap:hover { transform: none; }
+
+.roll-wrap { overflow-x: auto; }
+
+/* Keep AI/user text line breaks visible (rendered via textContent). */
+.msg-text { white-space: pre-wrap; }
+.ai-result { white-space: pre-wrap; }
+.chat-empty { font-size: 13px; color: var(--text3); text-align: center; padding: 2rem; }
+
+/* ─── CUSTOM SEQUENCE ────────────────────────────────── */
+.seq-input-row textarea {
+  flex: 1; background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: var(--r-sm); padding: 9px 13px;
+  color: var(--text); font-size: 13px; font-family: monospace;
+  outline: none; transition: border-color .15s; resize: vertical; min-height: 68px;
+}
+.seq-input-row textarea:focus { border-color: var(--green); }
+.seq-input-row textarea::placeholder { color: var(--text3); }
+.custom-visual-hdr {
+  font-size: 10px; font-weight: 600; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--text3); margin-bottom: 8px;
+}
+.custom-play-row { margin-top: 10px; display: flex; gap: 8px; }
+.custom-visual { margin-top: 14px; }
+
+/* ─── QUIZ RESULT ────────────────────────────────────── */
+.quiz-result { text-align: center; padding: 2rem; }
+.quiz-result-score {
+  font-size: 28px; font-weight: 700; color: var(--green);
+  margin-bottom: 8px; font-family: var(--font-display);
+}
+.quiz-result-msg { font-size: 14px; color: var(--text2); margin-bottom: 20px; }
+
+/* ─── SITE FOOTER ────────────────────────────────────── */
+.site-foot {
+  text-align: center; font-size: 11px; color: var(--text3);
+  padding: 24px 16px 40px;
+}
+.site-foot a { color: var(--text2); }
+
+/* ─── ACCESSIBILITY ──────────────────────────────────── */
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.tempo-label { font-size: 12px; color: var(--text3); }
+
+:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+.aa-block:focus-visible { outline-offset: 1px; transform: scale(1.18); z-index: 2; }
+.tab-btn:focus-visible { outline-offset: -2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .aa-block:hover, .aa-block.playing, .aa-block.mut { transform: none; }
+}
+
 /* ─── RESPONSIVE ─────────────────────────────────────── */
 @media (max-width: 520px) {
   .disease-grid { grid-template-columns: 1fr; }
@@ -463,4 +562,7 @@ body {
   .hero-title   { font-size: 30px; }
   .controls-bar { flex-wrap: wrap; }
   .tempo-wrap   { margin-left: 0; }
+  .seq-hdr      { flex-wrap: wrap; row-gap: 4px; }
+  .seq-hdr-hint { margin-left: 0; }
+  .seq-input-row { flex-direction: column; }
 }

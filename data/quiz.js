@@ -1,6 +1,6 @@
 const QUIZ_DATA = [
   {
-    q: 'In sickle cell disease, what kind of mutation occurs?',
+    q: 'In sickle cell disease, what kind of mutation occurs in the β-globin gene?',
     opts: [
       'A whole section of DNA is deleted',
       'One amino acid is swapped for another',
@@ -8,10 +8,10 @@ const QUIZ_DATA = [
       'An extra amino acid is inserted'
     ],
     ans: 1,
-    exp: 'Sickle cell is a single point mutation — glutamic acid (E) becomes valine (V) at position 6. Just one swap out of 147 causes the entire protein to misfold.'
+    exp: 'It is a single point mutation: glutamate (E) at β-globin position 6 becomes valine (V). One substitution in a 146-residue chain is enough to make hemoglobin S aggregate when oxygen is low.'
   },
   {
-    q: 'In the sonification system, which amino acids get the lowest pitch?',
+    q: 'In this app’s sonification mapping, which amino acids are given the lowest pitch?',
     opts: [
       'Nonpolar amino acids',
       'Polar amino acids',
@@ -19,39 +19,43 @@ const QUIZ_DATA = [
       'Negatively charged amino acids'
     ],
     ans: 3,
-    exp: 'Negatively charged amino acids like aspartate (D) and glutamate (E) are mapped to the lowest pitches. When sickle cell removes that charge, the pitch jumps — and you can hear it.'
+    exp: 'This app maps negatively charged residues — aspartate (D) and glutamate (E) — to the lowest notes. It is an educational design choice based on broad chemical groups, not a physical measurement.'
   },
   {
-    q: 'Cystic fibrosis is caused by a deletion. What does this sound like in the music?',
+    q: 'Cystic fibrosis F508del is a deletion. How is that represented in the melody here?',
     opts: [
       'An extra note appears',
       'A note is played twice as long',
-      'A note is completely missing',
+      'A beat is silent and the mutant line is one note shorter',
       'The melody plays backwards'
     ],
     ans: 2,
-    exp: 'A deletion means one amino acid is removed entirely. In the music this appears as a missing note — a gap where a sound should be. The mutant sequence is literally one beat shorter.'
+    exp: 'One residue (phenylalanine 508) is removed, so the mutant sequence has one fewer amino acid. The app keeps that position in the timeline and plays it as silence, so the two lines stay aligned.'
   },
   {
-    q: 'Why is TTR amyloidosis especially relevant to this project?',
+    q: 'The transthyretin V30M mutation swaps valine for methionine. Why does it barely change the note?',
     opts: [
-      'It was the first disease ever sequenced',
-      'Nanobodies are being developed to treat it',
-      'It has the most dramatic musical change',
-      'It affects the most people worldwide'
+      'The app ignores rare mutations',
+      'Valine and methionine are both nonpolar and map to nearby pitches',
+      'Methionine has no assigned note',
+      'The mutation is silent at the DNA level'
     ],
     ans: 1,
-    exp: 'TTR amyloidosis is directly connected to nanobody research — the very thing your team explored. Nanobodies that bind misfolded TTR are being actively developed as therapies.'
+    exp: 'Valine and methionine are both nonpolar, so they map to neighbouring notes. A small audible change does not mean a small biological effect — V30M still destabilises transthyretin and causes amyloidosis.'
   },
   {
     q: 'What does the height of each bar in the piano roll represent?',
     opts: [
       'How many atoms the amino acid has',
-      'The molecular weight',
-      'The musical pitch — higher bar = higher note',
-      'The position in the sequence'
+      'The molecular weight of the residue',
+      'The mapped musical pitch — a higher bar is a higher note',
+      'The position of the residue in the sequence'
     ],
     ans: 2,
-    exp: 'Bar height directly encodes pitch. Negatively charged amino acids have short bars (low pitch), positively charged ones have tall bars (high pitch), and nonpolar acids sit in the middle range.'
+    exp: 'Bar height encodes the mapped pitch. In this scheme negatively charged residues sit low, positively charged residues sit high, and nonpolar and polar residues fall in between.'
   }
 ];
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { QUIZ_DATA };
+}

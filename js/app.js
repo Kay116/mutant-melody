@@ -1,138 +1,187 @@
 // ─── APP CONTROLLER ─────────────────────────────────
-// Main state, tab switching, disease loading, quiz logic
+// State, tab switching (with a proper ARIA tab pattern),
+// disease loading, and quiz logic.
 
 let curDisease = 'sickle';
 let qIdx   = 0;
 let qScore = 0;
 
+const TAB_ORDER = ['listen', 'compare', 'ai', 'custom', 'quiz'];
+
 // ─── TABS ────────────────────────────────────────────
 function switchTab(tabId, clickedBtn) {
-  document.querySelectorAll('.pane').forEach(p => p.classList.remove('on'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('on'));
-  document.getElementById('pane-' + tabId).classList.add('on');
-  clickedBtn.classList.add('on');
+  const btns = Array.from(document.querySelectorAll('.tab-btn'));
+
+  document.querySelectorAll('.pane').forEach(p => {
+    p.classList.remove('on');
+    p.hidden = true;
+  });
+  btns.forEach(b => {
+    b.classList.remove('on');
+    b.setAttribute('aria-selected', 'false');
+    b.tabIndex = -1;
+  });
+
+  const pane = document.getElementById('pane-' + tabId);
+  if (pane) { pane.classList.add('on'); pane.hidden = false; }
+
+  const btn = clickedBtn || btns[TAB_ORDER.indexOf(tabId)];
+  if (btn) {
+    btn.classList.add('on');
+    btn.setAttribute('aria-selected', 'true');
+    btn.tabIndex = 0;
+  }
+
   if (tabId === 'quiz') loadQuiz();
+
+  // Canvases measured while their pane was hidden read a 0 width; redraw
+  // now that the Listen pane has layout.
+  if (tabId === 'listen') {
+    const a = window.curAlignment;
+    if (a) requestAnimationFrame(() => {
+      drawPianoRoll('cv-h', a.alignedHealthy, a.healthyHighlight, 'rgba(29,185,122,0.8)');
+      drawPianoRoll('cv-m', a.alignedMutant, a.mutantHighlight, 'rgba(226,75,74,0.8)');
+    });
+  }
 }
 
-function openTab(tabId) {
-  document.querySelectorAll('.pane').forEach(p => p.classList.remove('on'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('on'));
-  document.getElementById('pane-' + tabId).classList.add('on');
-  const tabIndex = { listen: 0, compare: 1, ai: 2, custom: 3, quiz: 4 };
-  const btns = document.querySelectorAll('.tab-btn');
-  if (btns[tabIndex[tabId]]) btns[tabIndex[tabId]].classList.add('on');
-  if (tabId === 'quiz') loadQuiz();
+// Keyboard support for the tablist: Left/Right/Home/End.
+function onTabKey(e) {
+  const btns = Array.from(document.querySelectorAll('.tab-btn'));
+  const i = btns.indexOf(e.currentTarget);
+  let next = null;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = (i + 1) % btns.length;
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = (i - 1 + btns.length) % btns.length;
+  else if (e.key === 'Home') next = 0;
+  else if (e.key === 'End') next = btns.length - 1;
+  if (next === null) return;
+  e.preventDefault();
+  btns[next].focus();
+  switchTab(TAB_ORDER[next], btns[next]);
 }
 
 // ─── LOAD DISEASE ────────────────────────────────────
 function loadDisease(key) {
-  curDisease  = key;
+  curDisease = key;
   chatHistory = [];
   stopAll();
 
   const d = DISEASES[key];
+  const align = buildAlignment(d.healthy.seq, d.mutation);
+  window.curAlignment = align;
 
-  // Story card
-  const quoteEl = document.getElementById('story-quote');
-  if (quoteEl) quoteEl.textContent = d.quote;
+  const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+  set('story-quote', d.quote);
+  set('mut-text', d.summary);
+  set('h-name', d.healthy.name);
+  set('m-name', mutantLabel(d));
 
   const tagsEl = document.getElementById('story-tags');
   if (tagsEl) {
-    tagsEl.innerHTML = '';
+    tagsEl.textContent = '';
     d.facts.forEach(f => {
       const span = document.createElement('span');
-      span.className   = 's-tag';
+      span.className = 's-tag';
       span.textContent = f;
       tagsEl.appendChild(span);
     });
   }
 
-  // Mutation callout
-  const mutEl = document.getElementById('mut-text');
-  if (mutEl) mutEl.innerHTML = d.mutation;
-
-  // Sequence header name
-  const hName = document.getElementById('h-name');
-  if (hName) hName.textContent = d.healthy.name;
-
-  // Render everything
-  renderAminoStrip('strip-h', d.healthy.seq, []);
-  renderAminoStrip('strip-m', d.mutant.seq,  d.mut);
+  renderAminoStrip('strip-h', align.alignedHealthy, align.healthyHighlight);
+  renderAminoStrip('strip-m', align.alignedMutant, align.mutantHighlight);
   renderLegend();
   renderDiseaseGrid();
   renderCompare();
+  renderSources(d);
   renderChat();
 
-  // Draw piano rolls after layout
-  setTimeout(() => {
-    drawPianoRoll('cv-h', d.healthy.seq, [],    'rgba(29,185,122,0.8)');
-    drawPianoRoll('cv-m', d.mutant.seq,  d.mut, 'rgba(226,75,74,0.8)');
-  }, 40);
+  const drawRolls = () => {
+    drawPianoRoll('cv-h', align.alignedHealthy, align.healthyHighlight, 'rgba(29,185,122,0.8)');
+    drawPianoRoll('cv-m', align.alignedMutant, align.mutantHighlight, 'rgba(226,75,74,0.8)');
+  };
+  requestAnimationFrame(drawRolls);
+  setTimeout(drawRolls, 60);   // fallback when rAF is paused (background tab)
+}
+
+function mutantLabel(d) {
+  const m = d.mutation;
+  if (m.type === 'deletion') return `${d.mutant ? d.mutant.name : d.healthy.name} · Δ${m.from}${m.biologicalPosition}`;
+  return `${m.from}${m.biologicalPosition}${m.to}`;
 }
 
 // ─── QUIZ ────────────────────────────────────────────
 function loadQuiz() {
   const el = document.getElementById('quiz-body');
   if (!el) return;
+  el.textContent = '';
 
-  // All questions answered — show results
   if (qIdx >= QUIZ_DATA.length) {
-    el.innerHTML = `
-      <div style="text-align:center;padding:2rem">
-        <div style="font-size:28px;font-weight:700;color:var(--green);
-          margin-bottom:8px;font-family:var(--font-display)">
-          ${qScore} / ${QUIZ_DATA.length}
-        </div>
-        <div style="font-size:14px;color:var(--text2);margin-bottom:20px">
-          ${qScore === QUIZ_DATA.length
-            ? 'Perfect! You understand protein sonification deeply.'
-            : qScore >= 3
-            ? 'Great — explore the diseases and come back!'
-            : 'Keep listening and try again.'}
-        </div>
-        <button class="quiz-next" onclick="qIdx=0;qScore=0;updateScore();loadQuiz()">
-          Try again
-        </button>
-      </div>`;
+    const wrap = document.createElement('div');
+    wrap.className = 'quiz-result';
+    const score = document.createElement('div');
+    score.className = 'quiz-result-score';
+    score.textContent = `${qScore} / ${QUIZ_DATA.length}`;
+    const msg = document.createElement('div');
+    msg.className = 'quiz-result-msg';
+    msg.textContent = qScore === QUIZ_DATA.length
+      ? 'Perfect — you have the core idea down.'
+      : qScore >= 3
+      ? 'Solid. Explore the diseases and try again.'
+      : 'Keep listening and give it another go.';
+    const again = document.createElement('button');
+    again.className = 'quiz-next';
+    again.type = 'button';
+    again.textContent = 'Try again';
+    again.onclick = () => { qIdx = 0; qScore = 0; updateScore(); loadQuiz(); };
+    wrap.append(score, msg, again);
+    el.appendChild(wrap);
     return;
   }
 
   const q = QUIZ_DATA[qIdx];
-  let html = `<div class="quiz-q">${q.q}</div><div class="quiz-opts">`;
+  const question = document.createElement('div');
+  question.className = 'quiz-q';
+  question.textContent = q.q;
+  el.appendChild(question);
+
+  const opts = document.createElement('div');
+  opts.className = 'quiz-opts';
   q.opts.forEach((opt, i) => {
-    html += `<button class="quiz-opt" onclick="answerQuiz(${i})">${opt}</button>`;
+    const btn = document.createElement('button');
+    btn.className = 'quiz-opt';
+    btn.type = 'button';
+    btn.textContent = opt;
+    btn.onclick = () => answerQuiz(i);
+    opts.appendChild(btn);
   });
-  html += '</div>';
-  el.innerHTML = html;
+  el.appendChild(opts);
 }
 
 function answerQuiz(selectedIndex) {
-  const q    = QUIZ_DATA[qIdx];
+  const q = QUIZ_DATA[qIdx];
   const btns = document.querySelectorAll('.quiz-opt');
 
-  // Disable all options
-  btns.forEach(b => b.disabled = true);
-
-  // Color correct / wrong
+  btns.forEach(b => { b.disabled = true; });
   btns[selectedIndex].classList.add(selectedIndex === q.ans ? 'correct' : 'wrong');
   if (selectedIndex !== q.ans) btns[q.ans].classList.add('correct');
 
   if (selectedIndex === q.ans) qScore++;
   updateScore();
 
-  // Show explanation
-  const body     = document.getElementById('quiz-body');
+  const body = document.getElementById('quiz-body');
+
   const feedback = document.createElement('div');
-  feedback.className   = 'quiz-feedback';
-  feedback.textContent = q.exp;
+  feedback.className = 'quiz-feedback';
+  feedback.setAttribute('role', 'status');
+  feedback.textContent = (selectedIndex === q.ans ? 'Correct. ' : 'Not quite. ') + q.exp;
 
   const nextBtn = document.createElement('button');
-  nextBtn.className   = 'quiz-next';
+  nextBtn.className = 'quiz-next';
+  nextBtn.type = 'button';
   nextBtn.textContent = qIdx < QUIZ_DATA.length - 1 ? 'Next question →' : 'See results →';
-  nextBtn.onclick     = () => { qIdx++; loadQuiz(); };
+  nextBtn.onclick = () => { qIdx++; loadQuiz(); };
 
-  body.appendChild(feedback);
-  body.appendChild(nextBtn);
+  body.append(feedback, nextBtn);
 }
 
 function updateScore() {
@@ -141,18 +190,32 @@ function updateScore() {
 }
 
 // ─── INIT ────────────────────────────────────────────
+let appInitialised = false;
 function init() {
+  if (appInitialised) return;
+  appInitialised = true;
+
+  document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('keydown', onTabKey));
+
   renderDiseaseGrid();
   renderChips();
   loadDisease('sickle');
+  updateTempo(document.getElementById('tempo-sl')?.value || 2);
 
-  // Redraw canvas on window resize
+  // First user gesture anywhere unlocks audio on browsers that suspend it.
+  const unlock = () => { resumeAudio(); window.removeEventListener('pointerdown', unlock); };
+  window.addEventListener('pointerdown', unlock);
+
+  let resizeTimer = null;
   window.addEventListener('resize', () => {
-    const d = DISEASES[curDisease];
-    drawPianoRoll('cv-h', d.healthy.seq, [],    'rgba(29,185,122,0.8)');
-    drawPianoRoll('cv-m', d.mutant.seq,  d.mut, 'rgba(226,75,74,0.8)');
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      const a = window.curAlignment;
+      if (!a) return;
+      drawPianoRoll('cv-h', a.alignedHealthy, a.healthyHighlight, 'rgba(29,185,122,0.8)');
+      drawPianoRoll('cv-m', a.alignedMutant, a.mutantHighlight, 'rgba(226,75,74,0.8)');
+    }, 150);
   });
 }
 
-// Start everything when the page loads
 window.addEventListener('DOMContentLoaded', init);

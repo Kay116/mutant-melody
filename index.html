@@ -4,33 +4,41 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Disease in D Minor</title>
-
-  <!-- All styles live in css/style.css -->
+  <meta name="description" content="An educational demo that maps protein mutations to musical notes. Not medical advice.">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
   <!-- ═══ HERO ═══════════════════════════════════════ -->
-  <div class="hero">
+  <header class="hero">
     <div class="hero-eyebrow">Bioinformatics × Music</div>
     <h1 class="hero-title">Disease in <span class="accent">D minor</span></h1>
-    <p class="hero-sub">One wrong amino acid. One wrong note. Hear the difference — then let AI explain it in plain English.</p>
+    <p class="hero-sub">One changed amino acid, one changed note. Hear the difference, then read a plain-English explanation.</p>
+  </header>
+
+  <!-- ═══ DISCLAIMER ═════════════════════════════════ -->
+  <div class="disclaimer" role="note">
+    <strong>Educational demonstration — not medical or diagnostic advice.</strong>
+    The amino-acid-to-note mapping is a research-inspired teaching device based on broad
+    physicochemical categories; it does not measure or predict protein structure or function,
+    and an audible difference does not indicate disease severity. AI explanations may be
+    inaccurate. Sequences you paste are sent to a third-party AI provider only if an AI
+    backend is configured (see the README).
   </div>
 
   <!-- ═══ APP ════════════════════════════════════════ -->
   <div class="app">
 
-    <!-- Tab navigation -->
-    <div class="tab-bar">
-      <button class="tab-btn on" onclick="switchTab('listen', this)">♫ Listen</button>
-      <button class="tab-btn"    onclick="switchTab('compare', this)">⊞ Compare</button>
-      <button class="tab-btn"    onclick="switchTab('ai', this)">◎ Ask AI</button>
-      <button class="tab-btn"    onclick="switchTab('custom', this)">⊕ My sequence</button>
-      <button class="tab-btn"    onclick="switchTab('quiz', this)">◈ Quiz</button>
+    <div class="tab-bar" role="tablist" aria-label="Views">
+      <button class="tab-btn on" id="tab-listen"  role="tab" aria-selected="true"  aria-controls="pane-listen"  tabindex="0"  onclick="switchTab('listen', this)">♫ Listen</button>
+      <button class="tab-btn"    id="tab-compare" role="tab" aria-selected="false" aria-controls="pane-compare" tabindex="-1" onclick="switchTab('compare', this)">⊞ Compare</button>
+      <button class="tab-btn"    id="tab-ai"      role="tab" aria-selected="false" aria-controls="pane-ai"      tabindex="-1" onclick="switchTab('ai', this)">◎ Ask AI</button>
+      <button class="tab-btn"    id="tab-custom"  role="tab" aria-selected="false" aria-controls="pane-custom"  tabindex="-1" onclick="switchTab('custom', this)">⊕ My sequence</button>
+      <button class="tab-btn"    id="tab-quiz"    role="tab" aria-selected="false" aria-controls="pane-quiz"    tabindex="-1" onclick="switchTab('quiz', this)">◈ Quiz</button>
     </div>
 
     <!-- ── LISTEN ─────────────────────────────────── -->
-    <div id="pane-listen" class="pane on">
+    <section id="pane-listen" class="pane on" role="tabpanel" aria-labelledby="tab-listen" tabindex="0">
 
       <div class="disease-grid" id="d-grid"></div>
 
@@ -44,32 +52,34 @@
         <div class="mut-text" id="mut-text"></div>
       </div>
 
+      <div class="sources" id="sources"></div>
+
       <div class="controls-bar">
         <button class="play-btn h-btn" id="btn-h" onclick="playSequence('h')">▶ Healthy</button>
         <button class="play-btn m-btn" id="btn-m" onclick="playSequence('m')">▶ Mutant</button>
-        <button class="stop-btn"       onclick="stopAll()">■</button>
+        <button class="stop-btn" type="button" aria-label="Stop playback" onclick="stopAll()">■</button>
         <div class="tempo-wrap">
-          ◷
+          <label for="tempo-sl" class="tempo-label">Tempo</label>
           <input type="range" min="1" max="3" step="1" value="2"
-            id="tempo-sl" oninput="updateTempo(this.value)">
-          <span class="tempo-lbl" id="tempo-lbl">norm</span>
+            id="tempo-sl" aria-valuetext="normal tempo" oninput="updateTempo(this.value)">
+          <span class="tempo-lbl" id="tempo-lbl">normal</span>
         </div>
       </div>
 
-      <div class="tip-bar" id="tip-bar">
-        Hover any amino acid block to learn what it is
+      <div class="tip-bar" id="tip-bar" role="status" aria-live="polite">
+        Hover or focus any amino acid block to learn what it is
       </div>
 
       <!-- Healthy sequence -->
       <div class="seq-section">
         <div class="seq-hdr">
-          <div class="seq-dot" style="background:var(--green)"></div>
+          <div class="seq-dot seq-dot-green"></div>
           <span class="seq-hdr-label">Healthy sequence</span>
-          <span class="seq-hdr-label" id="h-name"
-            style="font-weight:400;text-transform:none;letter-spacing:0;margin-left:4px"></span>
+          <span class="seq-hdr-name" id="h-name"></span>
         </div>
         <div class="roll-wrap">
-          <canvas class="roll-canvas" id="cv-h"></canvas>
+          <canvas class="roll-canvas" id="cv-h" role="img"
+            aria-label="Piano-roll of the healthy sequence: bar height is mapped pitch."></canvas>
         </div>
         <div class="aa-strip" id="strip-h"></div>
       </div>
@@ -77,14 +87,14 @@
       <!-- Mutant sequence -->
       <div class="seq-section">
         <div class="seq-hdr">
-          <div class="seq-dot" style="background:var(--red)"></div>
+          <div class="seq-dot seq-dot-red"></div>
           <span class="seq-hdr-label">Mutant sequence</span>
-          <span style="font-size:10px;color:var(--red);margin-left:6px">
-            (red border = mutation site)
-          </span>
+          <span class="seq-hdr-name" id="m-name"></span>
+          <span class="seq-hdr-hint">red outline = mutation site · dashed slot = deleted residue</span>
         </div>
         <div class="roll-wrap">
-          <canvas class="roll-canvas" id="cv-m"></canvas>
+          <canvas class="roll-canvas" id="cv-m" role="img"
+            aria-label="Piano-roll of the mutant sequence, aligned to the healthy one."></canvas>
         </div>
         <div class="aa-strip" id="strip-m"></div>
       </div>
@@ -92,94 +102,93 @@
       <div class="legend" id="legend"></div>
 
       <div class="footer-actions">
-        <button class="fa-btn" onclick="openTab('ai')">◎ Ask AI about this disease ↗</button>
-        <button class="fa-btn" onclick="openTab('compare')">⊞ Compare side by side ↗</button>
-        <button class="fa-btn" onclick="openTab('quiz')">◈ Test your knowledge ↗</button>
+        <button class="fa-btn" onclick="switchTab('ai')">◎ Ask AI about this disease ↗</button>
+        <button class="fa-btn" onclick="switchTab('compare')">⊞ Compare side by side ↗</button>
+        <button class="fa-btn" onclick="switchTab('quiz')">◈ Test your knowledge ↗</button>
       </div>
-    </div>
+    </section>
 
     <!-- ── COMPARE ────────────────────────────────── -->
-    <div id="pane-compare" class="pane">
+    <section id="pane-compare" class="pane" role="tabpanel" aria-labelledby="tab-compare" tabindex="0" hidden>
       <div class="cmp-grid" id="cmp-grid"></div>
       <div class="insight-box" id="cmp-insight"></div>
       <div class="controls-bar">
         <button class="play-btn h-btn" id="btn-h2" onclick="playSequence('h')">▶ Healthy</button>
         <button class="play-btn m-btn" id="btn-m2" onclick="playSequence('m')">▶ Mutant</button>
-        <button class="stop-btn"       onclick="stopAll()">■</button>
+        <button class="stop-btn" type="button" aria-label="Stop playback" onclick="stopAll()">■</button>
       </div>
-    </div>
+    </section>
 
     <!-- ── ASK AI ─────────────────────────────────── -->
-    <div id="pane-ai" class="pane">
+    <section id="pane-ai" class="pane" role="tabpanel" aria-labelledby="tab-ai" tabindex="0" hidden>
       <div class="ai-panel">
         <div class="ai-head">
-          <span style="font-size:18px;opacity:.7">◎</span>
-          <span class="ai-head-title">Your biology guide</span>
+          <span class="ai-head-icon" aria-hidden="true">◎</span>
+          <span class="ai-head-title">Biology guide</span>
           <div class="ai-status">
-            <div class="ai-dot"></div> Ready
+            <div class="ai-dot" aria-hidden="true"></div>
+            <span id="ai-status-text" aria-live="polite">Ready</span>
           </div>
         </div>
-        <div class="chat-body" id="chat-body">
-          <div style="font-size:13px;color:var(--text3);text-align:center;padding:2rem">
-            Select a disease on the Listen tab, then ask me anything.
-          </div>
-        </div>
+        <div class="chat-body" id="chat-body" role="log" aria-live="polite" aria-label="Conversation"></div>
         <div class="chips" id="chips"></div>
         <div class="chat-input-row">
-          <input type="text" id="chat-in"
-            placeholder="Ask anything about this mutation or disease…"
+          <label for="chat-in" class="visually-hidden">Ask a question about this disease or mutation</label>
+          <input type="text" id="chat-in" maxlength="500"
+            placeholder="Ask about this mutation or disease…"
             onkeydown="if(event.key==='Enter') doChat()">
-          <button class="ask-btn" id="ask-btn" onclick="doChat()">Ask</button>
+          <button class="ask-btn" id="ask-btn" type="button" onclick="doChat()">Ask</button>
         </div>
       </div>
-    </div>
+    </section>
 
     <!-- ── MY SEQUENCE ────────────────────────────── -->
-    <div id="pane-custom" class="pane">
+    <section id="pane-custom" class="pane" role="tabpanel" aria-labelledby="tab-custom" tabindex="0" hidden>
       <div class="custom-wrap">
         <div class="custom-title">Paste your own sequence</div>
         <div class="custom-sub">
-          Enter any amino acid sequence using single letters
-          (A C D E F G H I K L M N P Q R S T V W Y).
-          Try sequences from SabDab, Echinobase, or UniProt.
-          The AI will explain what it is and what it sounds like.
+          Enter an amino-acid sequence in single-letter code
+          (A C D E F G H I K L M N P Q R S T V W Y). FASTA headers
+          (lines starting with <code>&gt;</code>), spaces and line breaks are ignored.
+          3–500 residues.
         </div>
         <div class="seq-input-row">
-          <input type="text" id="seq-in"
-            placeholder="e.g. MVHLTPEEKSAVTALWGK"
-            maxlength="80"
-            oninput="this.value = this.value.toUpperCase()">
-          <button class="go-btn" id="go-btn" onclick="doCustomAnalysis()">
-            ⊕ Analyze
-          </button>
+          <label for="seq-in" class="visually-hidden">Amino acid sequence</label>
+          <textarea id="seq-in" rows="3" spellcheck="false"
+            placeholder="e.g. MVHLTPEEKSAVTALWGK  — or paste a FASTA record"></textarea>
+          <button class="go-btn" id="go-btn" type="button" onclick="doCustomAnalysis()">⊕ Analyze</button>
         </div>
-        <div class="err-msg" id="seq-err"></div>
+        <div class="err-msg" id="seq-err" role="alert" aria-live="assertive"></div>
       </div>
-      <div class="ai-result" id="custom-result">
-        AI analysis will appear here — what kind of protein this might be,
-        what its chemical pattern sounds like, and what's biologically
-        interesting about it.
+      <div class="ai-result" id="custom-result" aria-live="polite">
+        A composition summary and (if an AI backend is configured) a plain-English
+        analysis will appear here. The visualization below works either way.
       </div>
-      <div id="custom-visual" style="margin-top:14px"></div>
-    </div>
+      <div id="custom-visual" class="custom-visual"></div>
+    </section>
 
     <!-- ── QUIZ ───────────────────────────────────── -->
-    <div id="pane-quiz" class="pane">
+    <section id="pane-quiz" class="pane" role="tabpanel" aria-labelledby="tab-quiz" tabindex="0" hidden>
       <div class="quiz-wrap">
         <div class="quiz-hdr">
           <span class="quiz-hdr-title">◈ Test your understanding</span>
-          <span class="quiz-score-lbl" id="quiz-score">Score: 0 / 0</span>
+          <span class="quiz-score-lbl" id="quiz-score" aria-live="polite">Score: 0 / 0</span>
         </div>
         <div class="quiz-body" id="quiz-body"></div>
       </div>
-    </div>
+    </section>
 
   </div><!-- end .app -->
 
-  <!-- ═══ SCRIPTS ════════════════════════════════════
-       Order matters — data first, then functions, then app
-  ══════════════════════════════════════════════════ -->
+  <footer class="site-foot">
+    <a href="README.md">About &amp; sources</a> ·
+    Educational demo · not medical advice
+  </footer>
+
+  <!-- ═══ SCRIPTS — data first, then logic, then app ═══ -->
+  <script src="data/config.js"></script>
   <script src="data/aminoacids.js"></script>
+  <script src="js/sequence.js"></script>
   <script src="data/diseases.js"></script>
   <script src="data/quiz.js"></script>
   <script src="js/audio.js"></script>
