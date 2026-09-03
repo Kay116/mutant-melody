@@ -4,7 +4,7 @@
 
 A personal project rebuilding and expanding an idea I originally explored at a bioinformatics hackathon 10 months ago — now developed solo with a proper codebase, AI integration, and a full educational experience for the public.
 
-**Live demo:** `https://yourusername.github.io/disease-in-d-minor`
+**Live demo:** `https://Kay116.github.io/disease-in-d-minor`
 
 ---
 
