@@ -1,7 +1,7 @@
 {
-  "name": "disease-in-d-minor",
+  "name": "mutant-melody",
   "version": "1.0.0",
-  "description": "Educational demo that maps protein mutations to musical notes. Not medical advice.",
+  "description": "Mutant Melody — educational demo that maps protein mutations to musical notes. Not medical advice.",
   "type": "commonjs",
   "scripts": {
     "lint": "node scripts/check-syntax.js",

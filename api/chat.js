@@ -1,7 +1,7 @@
 // ─── AI BACKEND ─────────────────────────────────────
 // Serverless function (Vercel / Netlify Node runtime style).
 // The Groq API key is read from the environment and never
-// leaves this process. Deploy this and set DDM_CONFIG.apiBase
+// leaves this process. Deploy this and set MM_CONFIG.apiBase
 // in data/config.js to the deployment origin.
 //
 // Local dev:  `node server.js`  (see server.js) exposes the
@@ -53,7 +53,7 @@ function diseasePrompt(key) {
   const change = m.type === 'deletion'
     ? `deletion of ${m.from} at position ${m.biologicalPosition}`
     : `${m.from}${m.biologicalPosition}${m.to} substitution`;
-  return `You are a warm science guide inside "Disease in D Minor", an app that turns `
+  return `You are a warm science guide inside "Mutant Melody", an app that turns `
     + `protein mutations into music using a simplified educational mapping of amino-acid `
     + `chemical groups to pitch (this mapping is illustrative, not a physical measurement). `
     + `The user is exploring ${d.name}. Mutation: ${change}. `

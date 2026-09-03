@@ -1,0 +1,12 @@
+# Normalize all text files to LF inside the repository, regardless of
+# the OS the commit is made on. This stops the
+# "LF will be replaced by CRLF" warnings on Windows.
+* text=auto eol=lf
+
+# Binary files Git must never touch.
+*.png  binary
+*.ico  binary
+*.jpg  binary
+*.gif  binary
+*.woff binary
+*.woff2 binary

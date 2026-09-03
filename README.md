@@ -1,4 +1,4 @@
-# Disease in D Minor
+# Mutant Melody
 
 > One changed amino acid, one changed note. Hear the difference.
 
@@ -8,7 +8,7 @@ difference between a healthy and a mutant sequence. Each amino acid is
 mapped to a musical note by its broad chemical group; a substitution
 becomes a changed note and a deletion becomes a silent beat.
 
-**Live demo:** https://Kay116.github.io/disease-in-d-minor
+**Live demo:** https://Kay116.github.io/mutant-melody
 
 > ⚠️ **Educational demonstration — not medical or diagnostic advice.**
 > The amino-acid-to-note mapping is a *research-inspired teaching device*
@@ -117,8 +117,8 @@ later residues stay visually and rhythmically aligned.
 No build step. Any static file server works:
 
 ```bash
-git clone https://github.com/Kay116/disease-in-d-minor.git
-cd disease-in-d-minor
+git clone https://github.com/Kay116/mutant-melody.git
+cd mutant-melody
 python -m http.server 8080      # then open http://localhost:8080
 ```
 

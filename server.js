@@ -78,7 +78,7 @@ srv.on('error', err => {
 });
 
 srv.listen(PORT, () => {
-  console.log(`\n  ▶  Disease in D Minor running at  http://localhost:${PORT}\n`);
+  console.log(`\n  ▶  Mutant Melody running at  http://localhost:${PORT}\n`);
   const key = process.env.GROQ_API_KEY || '';
   if (!key.startsWith('gsk_')) {
     console.warn('  ⚠  No valid Groq key in .env yet — the AI tabs will show an error.');

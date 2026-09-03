@@ -3,7 +3,7 @@
 // to the AI provider directly. No API key is present in this
 // file or anywhere else in the browser bundle.
 //
-// If no backend is configured (DDM_CONFIG.apiBase is empty),
+// If no backend is configured (MM_CONFIG.apiBase is empty),
 // the AI features degrade to a clear "not configured" message
 // and the rest of the app is unaffected.
 
@@ -11,7 +11,7 @@ let chatHistory = [];
 let aiRequestInFlight = false;
 
 function aiConfig() {
-  return window.DDM_CONFIG || {};
+  return window.MM_CONFIG || {};
 }
 
 function aiBackendConfigured() {

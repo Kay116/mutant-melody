@@ -1,6 +1,6 @@
 # Setup guide
 
-How to run **Disease in D Minor** locally, deploy the static site, and
+How to run **Mutant Melody** locally, deploy the static site, and
 (optionally) deploy the AI backend.
 
 > **Never put an API key in the front-end or commit one to Git.** The key
@@ -24,8 +24,8 @@ How to run **Disease in D Minor** locally, deploy the static site, and
 ## Part 1 — Run the front-end locally
 
 ```bash
-git clone https://github.com/Kay116/disease-in-d-minor.git
-cd disease-in-d-minor
+git clone https://github.com/Kay116/mutant-melody.git
+cd mutant-melody
 python -m http.server 8080
 ```
 
@@ -40,12 +40,12 @@ until you point the app at a backend (Part 3).
 ## Part 2 — Deploy the static site (GitHub Pages)
 
 1. Push this repository to GitHub (it is already at
-   `github.com/Kay116/disease-in-d-minor`).
+   `github.com/Kay116/mutant-melody`).
 2. Repo **Settings → Pages**.
 3. **Build and deployment → Source:** *Deploy from a branch*.
 4. **Branch:** `main`, **Folder:** `/ (root)` → **Save**.
 5. After ~1 minute the site is live at
-   `https://Kay116.github.io/disease-in-d-minor`.
+   `https://Kay116.github.io/mutant-melody`.
 
 To update the live site, push to `main`.
 
